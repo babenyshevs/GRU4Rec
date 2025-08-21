@@ -34,3 +34,40 @@ def load_config(path: str) -> Dict[str, Any]:
                 raise ValueError("PyYAML is required to load YAML files")
             return yaml.safe_load(fh)
     raise ValueError(f"Unsupported config extension: {ext}")
+
+
+def load_paropt_config(path: str) -> Dict[str, Any]:
+    """Load configuration for the paropt utility.
+
+    The configuration is read from ``path`` and supplemented with default
+    values for optional fields.
+
+    Args:
+        path: Location of the configuration file.
+
+    Returns:
+        A dictionary containing the paropt configuration.
+    """
+    config = load_config(path)
+
+    defaults = {
+        "gru4rec_model": "gru4rec_pytorch",
+        "fixed_parameters": "",
+        "measure": 20,
+        "ntrials": 50,
+        "final_measure": [20],
+        "primary_metric": "recall",
+        "eval_type": "standard",
+        "device": "cuda:0",
+        "item_key": "ItemId",
+        "session_key": "SessionId",
+        "time_key": "Time",
+    }
+
+    for key, val in defaults.items():
+        config.setdefault(key, val)
+
+    if not isinstance(config.get("final_measure"), list):
+        config["final_measure"] = [config["final_measure"]]
+
+    return config
