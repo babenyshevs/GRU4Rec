@@ -1,0 +1,17 @@
+{
+  "path": "path/to/train.tsv",
+  "parameter_file": "paramfiles/rsc15_xe_shared_100_best.py",
+  "test": ["path/to/test.tsv"],
+  "measure": [20],
+  "eval_type": "standard",
+  "device": "cuda:0",
+  "sample_store_size": 10000000,
+  "gru4rec_model": "gru4rec_pytorch",
+  "item_key": "ItemId",
+  "session_key": "SessionId",
+  "time_key": "Time",
+  "primary_metric": "recall",
+  "log_primary_metric": false,
+  "load_model": false,
+  "save_model": null
+}
