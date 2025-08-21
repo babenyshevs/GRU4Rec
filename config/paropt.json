@@ -1,0 +1,16 @@
+{
+  "path": "path/to/train.tsv",
+  "test": "path/to/test.tsv",
+  "gru4rec_model": "gru4rec_pytorch",
+  "fixed_parameters": "loss=bpr-max",
+  "optuna_parameter_file": "paramspaces/gru4rec_xe_standard_parspace.json",
+  "measure": 20,
+  "ntrials": 50,
+  "final_measure": [20],
+  "primary_metric": "recall",
+  "eval_type": "standard",
+  "device": "cuda:0",
+  "item_key": "ItemId",
+  "session_key": "SessionId",
+  "time_key": "Time"
+}
