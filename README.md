@@ -15,11 +15,12 @@ The purpose of this reimplementation is to provide an official version of the al
 [Differences to the original](#differences-to-the-original "Differences to the original")  
   [Removed hyperparameters/settings](#removed-hyperparameterssettings "Removed hyperparameters/settings")  
   [Changed hyperparameters/settings](#changed-hyperparameterssettings "Changed hyperparameters/settings")  
-[Speed of training](#speed-of-training "Speed of training")  
-  [Training time comparison](#training-time-comparison "Training time comparison")  
-[Usage](#usage "Usage")  
-  [Examples](#examples "Examples")  
-  [Notes on sequence-aware and session-based models](#notes-on-sequence-aware-and-session-based-models "Notes on sequence-aware and session-based models")  
+[Speed of training](#speed-of-training "Speed of training")
+  [Training time comparison](#training-time-comparison "Training time comparison")
+[Configuration files](#configuration-files "Configuration files")
+[Usage](#usage "Usage")
+  [Examples](#examples "Examples")
+  [Notes on sequence-aware and session-based models](#notes-on-sequence-aware-and-session-based-models "Notes on sequence-aware and session-based models")
 [Reproducing results on public datasets](#reproducing-results-on-public-datasets "Reproducing results on public datasets")  
 [Hyperparameter tuning](#hyperparameter-tuning "Hyperparameter tuning")  
 [Major updates](#major-updates "Major updates")  
@@ -77,6 +78,56 @@ With `bpr-max` loss:
 ![image](img/training_time_bprmax_layers.png)
 
 The Theano version is 1.5-4x times faster depending on the settings. The figures also confirm that the difference is due to the larger overhead of PyTorch.
+
+## Configuration files
+
+`run.py` and `paropt.py` now read their settings from JSON configuration files.  By default
+`python run.py` looks for [`config/run.json`](config/run.json) and `python paropt.py` looks for
+[`config/paropt.json`](config/paropt.json).  Both files mirror the old command line options.
+
+Example `run.json`:
+
+```json
+{
+  "path": "path/to/train.tsv",
+  "parameter_file": "paramfiles/rsc15_xe_shared_100_best.py",
+  "test": ["path/to/test.tsv"]
+}
+```
+
+Example `paropt.json`:
+
+```json
+{
+  "path": "path/to/train.tsv",
+  "test": "path/to/test.tsv",
+  "fixed_parameters": "loss=bpr-max",
+  "optuna_parameter_file": "paramspaces/gru4rec_xe_standard_parspace.json"
+}
+```
+
+Running the scripts with no arguments uses these files:
+
+```bash
+python run.py
+python paropt.py
+```
+
+Set the environment variables `GRU4REC_RUN_CONFIG` or `GRU4REC_PAROPT_CONFIG` to override the
+location of the configuration files:
+
+```bash
+GRU4REC_RUN_CONFIG=/path/to/alt_run.json python run.py
+GRU4REC_PAROPT_CONFIG=/path/to/alt_paropt.json python paropt.py
+```
+
+### Migrating from the old CLI
+
+Older versions accepted all parameters on the command line (e.g. `python run.py /path/to/train
+/path/to/test -fp loss=bpr-max`).  Copy those argument values into the JSON files above: `path` and
+`test` replace the positional arguments, while flags such as `-fp` or `-opf` become the
+`fixed_parameters` and `optuna_parameter_file` fields.  Once the JSON files are populated, simply run
+`python run.py` or `python paropt.py` without additional arguments.
 
 ## Usage
 `run.py` is an easy way to train, evaluate and save/load GRU4Rec models.
