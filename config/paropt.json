@@ -1,7 +1,7 @@
 {
   "path": "path/to/train.tsv",
   "test": "path/to/test.tsv",
-  "gru4rec_model": "gru4rec_pytorch",
+  "gru4rec_model": "gru4rec",
   "fixed_parameters": "loss=bpr-max",
   "optuna_parameter_file": "paramspaces/gru4rec_xe_standard_parspace.json",
   "measure": 20,

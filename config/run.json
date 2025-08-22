@@ -6,7 +6,7 @@
   "eval_type": "standard",
   "device": "cuda:0",
   "sample_store_size": 10000000,
-  "gru4rec_model": "gru4rec_pytorch",
+  "gru4rec_model": "gru4rec",
   "item_key": "ItemId",
   "session_key": "SessionId",
   "time_key": "Time",

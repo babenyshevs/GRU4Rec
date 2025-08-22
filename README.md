@@ -171,7 +171,7 @@ optional arguments:
                         GRU4Rec uses a buffer for negative samples during training to maximize GPU utilization. This parameter sets the buffer length. Lower values require more frequent recomputation, higher values use more (GPU) memory.
                         Unless you know what you are doing, you shouldn't mess with this parameter. (Default: 10000000)
   -g GRFILE, --gru4rec_model GRFILE
-                        Name of the file containing the GRU4Rec class. Can be used to select different varaiants. (Default: gru4rec_pytorch)
+                        Name of the file containing the GRU4Rec class. Can be used to select different varaiants. (Default: gru4rec)
   -d DEVICE, --device DEVICE
                         Device used for computations (default: cuda:0).
   -ik IK, --item_key IK
@@ -403,7 +403,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -g GRFILE, --gru4rec_model GRFILE
-                        Name of the file containing the GRU4Rec class. Can be sued to select different varaiants. (Default: gru4rec_pytorch)
+                        Name of the file containing the GRU4Rec class. Can be sued to select different varaiants. (Default: gru4rec)
   -fp PARAM_STRING, --fixed_parameters PARAM_STRING
                         Fixed training parameters provided as a single parameter string. The format of the string is `param_name1=param_value1,param_name2=param_value2...`, e.g.: `loss=bpr-max,layers=100,constrained_embedding=True`.
                         Boolean training parameters should be either True or False; parameters that can take a list should use / as the separator (e.g. layers=200/200). Mutually exclusive with the -pf (--parameter_file) and the -l
