@@ -260,3 +260,57 @@ class GRU4Rec:
                 gru.data_iterator.sample_cache.device = torch.device(device)
         gru.model.eval()
         return gru
+
+    @torch.no_grad()
+    def predict(self, items, k=20, exclude_seen=True):
+        """Recommend next items for a given sequence.
+
+        Parameters
+        ----------
+        items : Sequence
+            Sequence of item identifiers representing the session history.
+        k : int, optional
+            Number of recommendations to return. Defaults to ``20``.
+        exclude_seen : bool, optional
+            If ``True`` (default), items already present in ``items`` will be
+            excluded from the recommendations.
+
+        Returns
+        -------
+        (list, list)
+            Tuple of recommended item identifiers and their corresponding
+            scores sorted in descending order.
+        """
+
+        if not hasattr(self, "model"):
+            raise ValueError("Model is not trained. Call fit before predict().")
+
+        itemidmap = self.data_iterator.itemidmap
+        try:
+            seq_idx = itemidmap[items].values
+        except KeyError as exc:
+            raise ValueError("Unknown item in input sequence") from exc
+
+        # initialize hidden states
+        H = [
+            torch.zeros((1, self.layers[i]), dtype=torch.float32, device=self.device)
+            for i in range(len(self.layers))
+        ]
+
+        # propagate through sequence to obtain scores for next item
+        for idx in seq_idx:
+            X = torch.tensor([idx], dtype=torch.int64, device=self.device)
+            scores = self.model.forward(X, H, None, training=False)
+
+        scores = scores.view(-1)
+        if exclude_seen:
+            scores[seq_idx] = -float("inf")
+
+        if k is None or k >= scores.shape[0]:
+            top_scores, top_items = torch.sort(scores, descending=True)
+        else:
+            top_scores, top_items = torch.topk(scores, k)
+
+        top_items = top_items.cpu().numpy()
+        item_ids = itemidmap.index[top_items].tolist()
+        return item_ids, top_scores.cpu().numpy().tolist()
