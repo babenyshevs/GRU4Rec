@@ -1,4 +1,4 @@
-from gru4rec_pytorch import SessionDataIterator
+from gru4rec import SessionDataIterator
 import torch
 
 @torch.no_grad()

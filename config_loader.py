@@ -51,7 +51,7 @@ def load_paropt_config(path: str) -> Dict[str, Any]:
     config = load_config(path)
 
     defaults = {
-        "gru4rec_model": "gru4rec_pytorch",
+        "gru4rec_model": "gru4rec",
         "fixed_parameters": "",
         "measure": 20,
         "ntrials": 50,

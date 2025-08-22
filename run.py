@@ -12,7 +12,7 @@ defaults = {
     "measure": [20],
     "eval_type": "standard",
     "sample_store_size": 10000000,
-    "gru4rec_model": "gru4rec_pytorch",
+    "gru4rec_model": "gru4rec",
     "device": "cuda:0",
     "item_key": "ItemId",
     "session_key": "SessionId",
