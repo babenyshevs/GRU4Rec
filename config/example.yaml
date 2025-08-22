@@ -1,0 +1,10 @@
+model:
+  layers: [10]
+  n_epochs: 1
+  batch_size: 2
+  learning_rate: 0.05
+  device: cpu
+
+data_split:
+  valid_fraction: 0.1
+  test_fraction: 0.1
