@@ -1,5 +1,4 @@
 import os
-from types import SimpleNamespace
 
 import config_loader
 
@@ -9,35 +8,7 @@ DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "
 
 def main():
     config_path = os.environ.get(CONFIG_ENV_VAR, DEFAULT_CONFIG_PATH)
-    config = config_loader.load_config(config_path)
-
-    defaults = {
-        "measure": [20],
-        "eval_type": "standard",
-        "sample_store_size": 10000000,
-        "gru4rec_model": "gru4rec",
-        "device": "cuda:0",
-        "item_key": "ItemId",
-        "session_key": "SessionId",
-        "time_key": "Time",
-        "primary_metric": "recall",
-        "log_primary_metric": False,
-        "save_model": None,
-        "load_model": False,
-        "test": None,
-        "parameter_string": None,
-        "parameter_file": None,
-    }
-
-    for key, val in defaults.items():
-        config.setdefault(key, val)
-
-    if config.get("test") is not None and not isinstance(config["test"], list):
-        config["test"] = [config["test"]]
-    if not isinstance(config.get("measure"), list):
-        config["measure"] = [config.get("measure")]
-
-    args = SimpleNamespace(**config)
+    args = config_loader.load_run_config(config_path)
 
     orig_cwd = os.getcwd()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
