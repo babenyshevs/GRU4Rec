@@ -1,20 +1,14 @@
-"""Utilities for loading GRU4Rec datasets.
+"""Utilities for preparing GRU4Rec datasets.
 
-This module provides helper functions for reading training or evaluation
-files stored either as tab separated values (TSV) or as pickled
-``pandas.DataFrame`` objects.  Each reader validates that the required
-columns are present and returns the data as a ``DataFrame`` so that other
-scripts can reuse the same loading logic without duplication.
-
-Example
--------
->>> from gru4rec.data_loader import load_data
->>> df = load_data("train.tsv")
+This module assumes that data is already loaded into a ``pandas.DataFrame``
+within an environment such as Databricks.  The :func:`train_valid_test_split`
+function performs a temporal split of the data into training, validation and
+test sets based on session end times.
 """
+
 from __future__ import annotations
 
 import pandas as pd
-import joblib
 
 DEFAULT_COL_NAMES = {
     "session_key": "SessionId",
@@ -23,17 +17,17 @@ DEFAULT_COL_NAMES = {
 }
 
 
-def _raise_missing(column: str, kind: str, fname: str, arg_name: str) -> None:
+def _raise_missing(column: str, kind: str, arg_name: str) -> None:
     default_name = DEFAULT_COL_NAMES[arg_name]
     raise ValueError(
-        f'ERROR. The column specified for {kind} "{column}" is not in the data file ({fname}). '
+        f'ERROR. The column specified for {kind} "{column}" is not in the data frame. '
         f'The default column name is "{default_name}", but you can specify otherwise by setting '
         f'the `{arg_name}` parameter of the model.'
     )
 
 
 def _validate_columns(
-    df: pd.DataFrame, fname: str, session_key: str, item_key: str, time_key: str
+    df: pd.DataFrame, session_key: str, item_key: str, time_key: str
 ) -> None:
     for column, kind, arg in [
         (session_key, "session IDs", "session_key"),
@@ -41,82 +35,61 @@ def _validate_columns(
         (time_key, "time", "time_key"),
     ]:
         if column not in df.columns:
-            _raise_missing(column, kind, fname, arg)
+            _raise_missing(column, kind, arg)
 
 
-def _validate_header(
-    header: list[str], fname: str, session_key: str, item_key: str, time_key: str
-) -> None:
-    for column, kind, arg in [
-        (session_key, "session IDs", "session_key"),
-        (item_key, "item IDs", "item_key"),
-        (time_key, "time", "time_key"),
-    ]:
-        if column not in header:
-            _raise_missing(column, kind, fname, arg)
-
-
-def read_pickle(
-    fname: str,
+def train_valid_test_split(
+    data: pd.DataFrame,
+    valid_fraction: float = 0.1,
+    test_fraction: float = 0.1,
     session_key: str = "SessionId",
     item_key: str = "ItemId",
     time_key: str = "Time",
-) -> pd.DataFrame:
-    """Load a pickled ``DataFrame`` and validate required columns."""
-    print(f"Loading data from pickle file: {fname}")
-    data = joblib.load(fname)
-    _validate_columns(data, fname, session_key, item_key, time_key)
-    return data
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Split ``data`` into train, validation and test sets.
 
-
-def read_tsv(
-    fname: str,
-    session_key: str = "SessionId",
-    item_key: str = "ItemId",
-    time_key: str = "Time",
-) -> pd.DataFrame:
-    """Load a TAB separated file into a ``DataFrame`` and validate columns."""
-    with open(fname, "rt") as f:
-        header = f.readline().strip().split("\t")
-    _validate_header(header, fname, session_key, item_key, time_key)
-    print(f"Loading data from TAB separated file: {fname}")
-    data = pd.read_csv(
-        fname,
-        sep="\t",
-        usecols=[session_key, item_key, time_key],
-        dtype={session_key: "int32", item_key: "str"},
-    )
-    _validate_columns(data, fname, session_key, item_key, time_key)
-    return data
-
-
-def load_data(
-    fname: str,
-    session_key: str = "SessionId",
-    item_key: str = "ItemId",
-    time_key: str = "Time",
-) -> pd.DataFrame:
-    """Load a dataset from ``fname`` and ensure required columns are present.
+    The split is performed on a session level. Sessions are ordered by their
+    last interaction timestamp and divided into train/validation/test by the
+    provided fractions.
 
     Parameters
     ----------
-    fname : str
-        Path to the dataset.  Files ending with ``.pickle`` are expected to be
-        pickled :class:`pandas.DataFrame` objects.  Other extensions are
-        interpreted as TAB separated files.
+    data : pandas.DataFrame
+        Input data containing at least ``session_key``, ``item_key`` and
+        ``time_key`` columns.
+    valid_fraction : float, optional
+        Fraction of sessions to include in the validation set.
+    test_fraction : float, optional
+        Fraction of sessions to include in the test set.
     session_key, item_key, time_key : str
-        Column names for sessions, items and timestamps.
+        Column names in ``data``.
 
     Returns
     -------
-    pandas.DataFrame
-        The loaded dataset containing at least the specified columns.
-
-    Raises
-    ------
-    ValueError
-        If any of the required columns are missing from ``fname``.
+    (train, valid, test) : tuple of pandas.DataFrame
+        Split datasets.
     """
-    if fname.endswith(".pickle"):
-        return read_pickle(fname, session_key, item_key, time_key)
-    return read_tsv(fname, session_key, item_key, time_key)
+
+    _validate_columns(data, session_key, item_key, time_key)
+
+    # Determine session order based on the last event timestamp.
+    session_end = data.groupby(session_key)[time_key].max().sort_values()
+    sessions_ordered = session_end.index.tolist()
+
+    n_sessions = len(sessions_ordered)
+    n_test = int(n_sessions * test_fraction)
+    n_valid = int(n_sessions * valid_fraction)
+
+    train_cutoff = n_sessions - n_test - n_valid
+    valid_cutoff = n_sessions - n_test
+
+    train_sessions = sessions_ordered[:train_cutoff]
+    valid_sessions = sessions_ordered[train_cutoff:valid_cutoff]
+    test_sessions = sessions_ordered[valid_cutoff:]
+
+    train = data[data[session_key].isin(train_sessions)]
+    valid = data[data[session_key].isin(valid_sessions)]
+    test = data[data[session_key].isin(test_sessions)]
+
+    return train, valid, test
+

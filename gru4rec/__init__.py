@@ -1,8 +1,9 @@
-"""GRU4Rec package exposing core classes."""
+"""GRU4Rec package exposing core classes and utilities."""
 from .data import SessionDataIterator
 from .model import GRUEmbedding, GRU4RecModel
 from .optimizers import IndexedAdagradM
 from .trainer import GRU4Rec
+from .data_loader import train_valid_test_split
 
 __all__ = [
     "IndexedAdagradM",
@@ -10,4 +11,5 @@ __all__ = [
     "GRU4RecModel",
     "SessionDataIterator",
     "GRU4Rec",
+    "train_valid_test_split",
 ]
