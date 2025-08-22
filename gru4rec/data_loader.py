@@ -61,6 +61,7 @@ def load_databricks_table(
 
 
 def _raise_missing(column: str, kind: str, arg_name: str) -> None:
+    """Raise a helpful error for missing ``column`` in the data frame."""
     default_name = DEFAULT_COL_NAMES[arg_name]
     raise ValueError(
         f'ERROR. The column specified for {kind} "{column}" is not in the data frame. '
@@ -72,6 +73,7 @@ def _raise_missing(column: str, kind: str, arg_name: str) -> None:
 def _validate_columns(
     df: pd.DataFrame, session_key: str, item_key: str, time_key: str
 ) -> None:
+    """Verify that the required columns exist in ``df``."""
     for column, kind, arg in [
         (session_key, "session IDs", "session_key"),
         (item_key, "item IDs", "item_key"),

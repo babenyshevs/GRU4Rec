@@ -1,3 +1,9 @@
+"""High-level helpers for configuration-driven workflows.
+
+This module reads YAML files, builds models, splits data and triggers
+evaluation to streamline typical GRU4Rec experiments.
+"""
+
 import yaml
 from .gru4rec import GRU4Rec
 from .data_loader import train_valid_test_split

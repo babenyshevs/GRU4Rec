@@ -1,3 +1,10 @@
+"""Implementation of the GRU4Rec session-based recommender.
+
+The :class:`GRU4Rec` class encapsulates model creation, training and
+prediction for GRU-based session recommendation with optional negative
+sampling and custom objectives.
+"""
+
 import time
 import numpy as np
 import torch
@@ -9,6 +16,8 @@ from .optimizers import IndexedAdagradM
 
 
 class GRU4Rec:
+    """High-level interface for training and querying GRU4Rec models."""
+
     def __init__(
         self,
         layers=[100],
@@ -28,6 +37,7 @@ class GRU4Rec:
         logq=0.0,
         device=torch.device("cuda:0"),
     ):
+        """Initialize the GRU4Rec model with architecture and training options."""
         self.device = device
         self.layers = layers
         self.loss = loss
@@ -50,6 +60,7 @@ class GRU4Rec:
         self.n_epochs = n_epochs
 
     def set_loss_function(self, loss):
+        """Select the training loss by name."""
         if loss == "cross-entropy":
             self.loss_function = self.xe_loss_with_softmax
         elif loss == "bpr-max":
@@ -58,6 +69,7 @@ class GRU4Rec:
             raise NotImplementedError
 
     def set_params(self, **kvargs):
+        """Dynamically update attributes based on keyword arguments."""
         maxk_len = np.max([len(str(x)) for x in kvargs.keys()])
         maxv_len = np.max([len(str(x)) for x in kvargs.values()])
         for k, v in kvargs.items():
@@ -102,6 +114,7 @@ class GRU4Rec:
             )
 
     def xe_loss_with_softmax(self, O, Y, M):
+        """Cross-entropy loss computed with softmax probabilities."""
         if self.logq > 0:
             O = O - self.logq * torch.log(
                 torch.cat([self.P0[Y[:M]], self.P0[Y[M:]] ** self.sample_alpha])
@@ -111,12 +124,14 @@ class GRU4Rec:
         return -torch.sum(torch.log(torch.diag(X) + 1e-24))
 
     def softmax_neg(self, X):
+        """Softmax over negative samples used in BPR-max loss."""
         hm = 1.0 - torch.eye(*X.shape, out=torch.empty_like(X))
         X = X * hm
         e_x = torch.exp(X - X.max(dim=1, keepdim=True)[0]) * hm
         return e_x / e_x.sum(dim=1, keepdim=True)
 
     def bpr_max_loss_with_elu(self, O, Y, M):
+        """BPR-max loss with optional ELU transformation."""
         if self.elu_param > 0:
             O = nn.functional.elu(O, self.elu_param)
         softmax_scores = self.softmax_neg(O)
@@ -139,6 +154,7 @@ class GRU4Rec:
         session_key="SessionId",
         time_key="Time",
     ):
+        """Train the model on session data."""
         self.error_during_train = False
         self.data_iterator = SessionDataIterator(
             data,
@@ -222,6 +238,7 @@ class GRU4Rec:
             )
 
     def _adjust_hidden(self, n_valid, finished_mask, valid_mask, H):
+        """Reset hidden states when sessions finish during iteration."""
         if (self.n_sample == 0) and (n_valid < 2):
             return True
         with torch.no_grad():
@@ -233,6 +250,7 @@ class GRU4Rec:
         return False
 
     def to(self, device):
+        """Move the model and iterator buffers to ``device``."""
         if isinstance(device, str):
             device = torch.device(device)
         if device == self.device:
@@ -248,10 +266,12 @@ class GRU4Rec:
         pass
 
     def savemodel(self, path):
+        """Persist the model to ``path`` using :func:`torch.save`."""
         torch.save(self, path)
 
     @classmethod
     def loadmodel(cls, path, device="cuda:0"):
+        """Load a serialized model from ``path``."""
         gru = torch.load(path, map_location=device)
         gru.device = torch.device(device)
         if hasattr(gru, "data_iterator"):

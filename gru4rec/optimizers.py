@@ -1,9 +1,14 @@
+"""Custom optimizers used by GRU4Rec."""
+
 import torch
 from torch.optim import Optimizer
 
 
 class IndexedAdagradM(Optimizer):
+    """Adagrad with momentum supporting sparse indexed updates."""
+
     def __init__(self, params, lr=0.05, momentum=0.0, eps=1e-6):
+        """Configure optimizer hyper-parameters."""
         if lr <= 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -15,11 +20,16 @@ class IndexedAdagradM(Optimizer):
         for group in self.param_groups:
             for p in group["params"]:
                 state = self.state[p]
-                state["acc"] = torch.full_like(p, 0, memory_format=torch.preserve_format)
+                state["acc"] = torch.full_like(
+                    p, 0, memory_format=torch.preserve_format
+                )
                 if momentum > 0:
-                    state["mom"] = torch.full_like(p, 0, memory_format=torch.preserve_format)
+                    state["mom"] = torch.full_like(
+                        p, 0, memory_format=torch.preserve_format
+                    )
 
     def share_memory(self):
+        """Share state tensors across processes."""
         for group in self.param_groups:
             for p in group["params"]:
                 state = self.state[p]
@@ -29,6 +39,7 @@ class IndexedAdagradM(Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
+        """Perform a single optimization step."""
         loss = None
         if closure is not None:
             with torch.enable_grad():

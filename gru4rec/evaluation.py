@@ -1,8 +1,46 @@
+"""Evaluation utilities for the GRU4Rec model.
+
+Currently provides a single convenience function to compute recall and mean
+reciprocal rank for batches of sessions.
+"""
+
 from . import SessionDataIterator
 import torch
 
+
 @torch.no_grad()
-def batch_eval(gru, test_data, cutoff=[20], batch_size=512, mode='conservative', item_key='ItemId', session_key='SessionId', time_key='Time'):
+def batch_eval(
+    gru,
+    test_data,
+    cutoff=[20],
+    batch_size=512,
+    mode="conservative",
+    item_key="ItemId",
+    session_key="SessionId",
+    time_key="Time",
+):
+    """Evaluate ``gru`` on ``test_data``.
+
+    Parameters
+    ----------
+    gru : GRU4Rec
+        Trained model to evaluate.
+    test_data : pandas.DataFrame
+        Interaction data ordered by session and time.
+    cutoff : list[int], optional
+        List of ranking cutoffs for recall and MRR.
+    batch_size : int, optional
+        Number of sessions processed in parallel.
+    mode : {'conservative', 'standard', 'median'}
+        Ranking tie handling strategy.
+    item_key, session_key, time_key : str
+        Column names in ``test_data``.
+
+    Returns
+    -------
+    tuple(dict, dict)
+        Recall and MRR scores keyed by cutoff.
+    """
     if gru.error_during_train: 
         raise Exception('Attempting to evaluate a model that wasn\'t trained properly (error_during_train=True)')
     recall = dict()

@@ -1,3 +1,5 @@
+"""Sampling helpers and iterators for GRU4Rec training."""
+
 import time
 from typing import Optional
 
@@ -7,10 +9,17 @@ import torch
 
 
 class SampleCache:
-    def __init__(self, n_sample, sample_cache_max_size, distr, device=torch.device("cuda:0")):
+    """Pre-generates and caches negative samples for efficiency."""
+
+    def __init__(
+        self, n_sample, sample_cache_max_size, distr, device=torch.device("cuda:0")
+    ):
+        """Initialize the cache given a sampling distribution."""
         self.device = device
         self.n_sample = n_sample
-        self.generate_length = sample_cache_max_size // n_sample if n_sample > 0 else 0
+        self.generate_length = (
+            sample_cache_max_size // n_sample if n_sample > 0 else 0
+        )
         self.distr = distr
         self._refresh()
         print(
@@ -20,6 +29,7 @@ class SampleCache:
         )
 
     def _bin_search(self, arr, x):
+        """Binary search over cumulative distribution ``arr``."""
         l = x.shape[0]
         a = torch.zeros(l, dtype=torch.int64, device=self.device)
         b = torch.zeros(l, dtype=torch.int64, device=self.device) + arr.shape[0]
@@ -32,6 +42,7 @@ class SampleCache:
         return a
 
     def _refresh(self):
+        """Draw a new batch of negative samples."""
         if self.n_sample <= 0:
             return
         x = torch.rand(
@@ -45,6 +56,7 @@ class SampleCache:
         self.sample_pointer = 0
 
     def get_sample(self):
+        """Return a cached sample, refreshing the cache if needed."""
         if self.sample_pointer >= self.generate_length:
             self._refresh()
         sample = self.neg_samples[self.sample_pointer]
@@ -53,6 +65,8 @@ class SampleCache:
 
 
 class SessionDataIterator:
+    """Iterate through sessions yielding training batches."""
+
     def __init__(
         self,
         data: pd.DataFrame,
@@ -67,13 +81,16 @@ class SessionDataIterator:
         device=torch.device("cuda:0"),
         itemidmap: Optional[pd.Series] = None,
     ):
+        """Prepare iteration state and optional negative sampling cache."""
         self.device = device
         self.batch_size = batch_size
         if itemidmap is None:
             itemids = data[item_key].unique()
             self.n_items = len(itemids)
             self.itemidmap = pd.Series(
-                data=np.arange(self.n_items, dtype="int32"), index=itemids, name="ItemIdx"
+                data=np.arange(self.n_items, dtype="int32"),
+                index=itemids,
+                name="ItemIdx",
             )
         else:
             print("Using existing item ID map")
@@ -103,6 +120,7 @@ class SessionDataIterator:
             )
 
     def sort_if_needed(self, data, columns, any_order_first_dim=False):
+        """Ensure data are sorted by ``columns`` for efficient iteration."""
         is_sorted = True
         neq_masks = []
         for i, col in enumerate(columns):
@@ -135,11 +153,13 @@ class SessionDataIterator:
             print("Data is sorted in {:.2f}".format(t1 - t0))
 
     def compute_offset(self, data, column):
+        """Compute index offsets for each session identifier."""
         offset = np.zeros(data[column].nunique() + 1, dtype=np.int32)
         offset[1:] = data.groupby(column).size().cumsum()
         return offset
 
     def __call__(self, enable_neg_samples, reset_hook=None):
+        """Yield batches of input and target indices."""
         batch_size = self.batch_size
         iters = np.arange(batch_size)
         maxiter = iters.max()
