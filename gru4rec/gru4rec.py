@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from .data import SessionDataIterator
+from .sampler import SessionDataIterator
 from .model import GRU4RecModel
 from .optimizers import IndexedAdagradM
 

@@ -1,9 +1,9 @@
 """GRU4Rec package exposing core classes and utilities."""
 
-from .data import SessionDataIterator
+from .sampler import SessionDataIterator
 from .model import GRUEmbedding, GRU4RecModel
 from .optimizers import IndexedAdagradM
-from .trainer import GRU4Rec
+from .gru4rec import GRU4Rec
 from .data_loader import train_valid_test_split
 
 __all__ = [
