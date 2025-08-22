@@ -129,6 +129,22 @@ Older versions accepted all parameters on the command line (e.g. `python run.py 
 `fixed_parameters` and `optuna_parameter_file` fields.  Once the JSON files are populated, simply run
 `python run.py` or `python paropt.py` without additional arguments.
 
+### Data loading utilities
+
+The `gru4rec.data_loader` module provides a small API for loading datasets from
+either tab separated value (TSV) files or pickled `pandas.DataFrame` objects.
+It verifies that the expected `session_key`, `item_key` and `time_key` columns
+are present before returning the data frame so that other scripts can reuse the
+same loading logic.
+
+```python
+from gru4rec.data_loader import load_data
+df = load_data("train.tsv")
+```
+
+Using this helper avoids duplicating column validation and file format handling
+in evaluation or custom training scripts.
+
 ## Usage
 `run.py` is an easy way to train, evaluate and save/load GRU4Rec models.
 

@@ -1,6 +1,7 @@
 import os
 
 import config_loader
+from gru4rec.data_loader import load_data
 
 CONFIG_ENV_VAR = "GRU4REC_RUN_CONFIG"
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "run.json")
@@ -13,7 +14,7 @@ def main():
     orig_cwd = os.getcwd()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     import numpy as np  # noqa: F401
-    import pandas as pd
+    import pandas as pd  # noqa: F401
     import datetime as dt  # noqa: F401
     import sys
     import time
@@ -22,84 +23,7 @@ def main():
     GRU4Rec = importlib.import_module(args.gru4rec_model).GRU4Rec
     import evaluation
     import importlib.util
-    import joblib
     os.chdir(orig_cwd)
-
-    def load_data(fname, args):
-        if fname.endswith(".pickle"):
-            print(f"Loading data from pickle file: {fname}")
-            data = joblib.load(fname)
-            if args.session_key not in data.columns:
-                print(
-                    'ERROR. The column specified for session IDs "{}" is not in the data file ({})'.format(
-                        args.session_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "SessionId", but you can specify otherwise by setting the `session_key` parameter of the model.'
-                )
-                sys.exit(1)
-            if args.item_key not in data.columns:
-                print(
-                    'ERROR. The column specified for item IDs "{}" is not in the data file ({})'.format(
-                        args.item_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "ItemId", but you can specify otherwise by setting the `item_key` parameter of the model.'
-                )
-                sys.exit(1)
-            if args.time_key not in data.columns:
-                print(
-                    'ERROR. The column specified for time "{}" is not in the data file ({})'.format(
-                        args.time_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "Time", but you can specify otherwise by setting the `time_key` parameter of the model.'
-                )
-                sys.exit(1)
-        else:
-            with open(fname, "rt") as f:
-                header = f.readline().strip().split("\t")
-            if args.session_key not in header:
-                print(
-                    'ERROR. The column specified for session IDs "{}" is not in the data file ({})'.format(
-                        args.session_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "SessionId", but you can specify otherwise by setting the `session_key` parameter of the model.'
-                )
-                sys.exit(1)
-            if args.item_key not in header:
-                print(
-                    'ERROR. The colmn specified for item IDs "{}" is not in the data file ({})'.format(
-                        args.item_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "ItemId", but you can specify otherwise by setting the `item_key` parameter of the model.'
-                )
-                sys.exit(1)
-            if args.time_key not in header:
-                print(
-                    'ERROR. The column specified for time "{}" is not in the data file ({})'.format(
-                        args.time_key, fname
-                    )
-                )
-                print(
-                    'The default column name is "Time", but you can specify otherwise by setting the `time_key` parameter of the model.'
-                )
-                sys.exit(1)
-            print(f"Loading data from TAB separated file: {fname}")
-            data = pd.read_csv(
-                fname,
-                sep="\t",
-                usecols=[args.session_key, args.item_key, args.time_key],
-                dtype={args.session_key: "int32", args.item_key: "str"},
-            )
-        return data
 
     if (args.parameter_string is not None) + (args.parameter_file is not None) + (args.load_model) != 1:
         print(
@@ -125,7 +49,12 @@ def main():
         gru = GRU4Rec(device=args.device)
         gru.set_params(**gru4rec_params)
         print("Loading training data...")
-        data = load_data(args.path, args)
+        data = load_data(
+            args.path,
+            session_key=args.session_key,
+            item_key=args.item_key,
+            time_key=args.time_key,
+        )
         print("Started training")
         t0 = time.time()
         gru.fit(
@@ -152,7 +81,12 @@ def main():
             )
         for test_file in args.test:
             print("Loading test data...")
-            test_data = load_data(test_file, args)
+            test_data = load_data(
+                test_file,
+                session_key=args.session_key,
+                item_key=args.item_key,
+                time_key=args.time_key,
+            )
             print(
                 "Starting evaluation (cut-off={}, using {} mode for tiebreaking)".format(
                     args.measure, args.eval_type
