@@ -80,6 +80,62 @@ paths:
   model_load: model.pth
 ```
 
+### Configuration options
+
+**Model**
+
+- `layers`: list defining the size of each GRU layer. Values between 50 and 512
+  units per layer are common.
+- `loss`: training objective, either `cross-entropy` (pointwise) or `bpr-max`
+  (pairwise).
+- `batch_size`: number of sessions processed in parallel; typically 32–512.
+- `dropout_p_embed`: dropout applied to item embeddings; 0.0–0.5.
+- `dropout_p_hidden`: dropout on hidden states; 0.0–0.5.
+- `learning_rate`: optimizer step size. Useful range is 1e-4 to 1e-1.
+- `momentum`: momentum coefficient for the optimizer; 0.0–0.99.
+- `sample_alpha`: exponent for popularity-based negative sampling. `0` gives
+  uniform sampling, while values in [0,1] bias towards popular items.
+- `n_sample`: number of negative samples per positive example. Set to `0` to
+  disable sampling; values up to a few thousand are typical.
+- `embedding`: dimension of a separate item embedding matrix. `0` uses GRU
+  weights instead.
+- `constrained_embedding`: tie input and output embeddings when `true`.
+- `n_epochs`: number of training epochs.
+- `bpreg`: regularization strength for the BPR-max loss; usually 0–2.
+- `elu_param`: ELU parameter for the BPR-max loss; 0.0–1.0.
+- `logq`: logarithmic popularity correction for cross-entropy loss; 0 disables
+  correction.
+- `device`: computation device such as `cpu` or `cuda:0`.
+
+**Data**
+
+- `session_key`, `item_key`, `time_key`: column names in the input data frame
+  identifying sessions, items and timestamps.
+
+**Data split**
+
+- `valid_fraction`, `test_fraction`: fractions of sessions reserved for
+  validation and testing respectively; values between 0 and 1.
+
+**Training**
+
+- `sample_cache_max_size`: maximum number of cached negative samples. Adjust to
+  fit available memory; ranges from 1e6 to 1e8 are typical.
+- `compatibility_mode`: if `true`, reset weights to match the original
+  GRU4Rec initialization.
+
+**Evaluation**
+
+- `cutoff`: list of ranking cutoffs (e.g. `[20]`).
+- `batch_size`: number of sessions per evaluation batch; often 128–1024.
+- `mode`: tie-handling strategy for ranking; `conservative`, `standard` or
+  `median`.
+
+**Paths**
+
+- `model_save`: file path where the trained model is saved.
+- `model_load`: path of a model to load before training or evaluation.
+
 Use the helper functions to load the configuration, split the data and build
 the model:
 
