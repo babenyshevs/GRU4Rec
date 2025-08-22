@@ -11,10 +11,12 @@ The purpose of this reimplementation is to provide an official version of the al
 
 **LICENSE:** Final license is coming soon! Meanwhile, use the [license of the original](https://github.com/hidasib/GRU4Rec/blob/master/license.txt), i.e. free for research and education, but contact me for commercial use.
 
-**CONTENTS:**  
-[Differences to the original](#differences-to-the-original "Differences to the original")  
-  [Removed hyperparameters/settings](#removed-hyperparameterssettings "Removed hyperparameters/settings")  
-  [Changed hyperparameters/settings](#changed-hyperparameterssettings "Changed hyperparameters/settings")  
+**CONTENTS:**
+[Model Architecture](#model-architecture "Model Architecture")
+[Project Structure](#project-structure "Project Structure")
+[Differences to the original](#differences-to-the-original "Differences to the original")
+  [Removed hyperparameters/settings](#removed-hyperparameterssettings "Removed hyperparameters/settings")
+  [Changed hyperparameters/settings](#changed-hyperparameterssettings "Changed hyperparameters/settings")
 [Speed of training](#speed-of-training "Speed of training")
   [Training time comparison](#training-time-comparison "Training time comparison")
 [Configuration files](#configuration-files "Configuration files")
@@ -22,8 +24,24 @@ The purpose of this reimplementation is to provide an official version of the al
   [Examples](#examples "Examples")
   [Notes on sequence-aware and session-based models](#notes-on-sequence-aware-and-session-based-models "Notes on sequence-aware and session-based models")
 [Reproducing results on public datasets](#reproducing-results-on-public-datasets "Reproducing results on public datasets")  
-[Hyperparameter tuning](#hyperparameter-tuning "Hyperparameter tuning")  
-[Major updates](#major-updates "Major updates")  
+[Hyperparameter tuning](#hyperparameter-tuning "Hyperparameter tuning")
+[Major updates](#major-updates "Major updates")
+
+## Model Architecture
+GRU4Rec stacks configurable `GRUCell` layers with optional dropout to model session dynamics. Item representations can share
+weights with the output layer (constrained embedding), use a separate embedding matrix, or bypass embeddings entirely
+by learning input weights directly in the first GRU layer. The trainer supports `cross-entropy` loss with softmax
+and `bpr-max` loss with an optional ELU activation, enabling pairwise ranking objectives.
+See [gru4rec/model.py](gru4rec/model.py) and [gru4rec/trainer.py](gru4rec/trainer.py) for implementation details.
+
+## Project Structure
+| Module | Responsibility |
+| --- | --- |
+| [`gru4rec/data.py`](gru4rec/data.py) | Session data iteration and negative sampling. |
+| [`gru4rec/model.py`](gru4rec/model.py) | Defines the GRU4Rec network with embeddings and output layers. |
+| [`gru4rec/trainer.py`](gru4rec/trainer.py) | Handles training loops, loss functions, and optimization. |
+| [`run.py`](run.py) | Command-line interface for training and evaluation. |
+| [`paropt.py`](paropt.py) | Hyperparameter optimization using Optuna. |
 
 ## Differences to the original
 There are a few differences between the original and the PyTorch version.
