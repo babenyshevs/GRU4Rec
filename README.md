@@ -15,6 +15,14 @@ with the following columns:
 | ``ItemId`` | Integer item identifier. |
 | ``Time`` | Timestamp in seconds. |
 
+If your interactions are stored in a Databricks table, you can load them
+directly into a DataFrame:
+
+```python
+from gru4rec import load_databricks_table
+df = load_databricks_table("schema.table")
+```
+
 Use :func:`gru4rec.train_valid_test_split` to split the DataFrame into
 training, validation and test sets.  The validation split is intended for
 hyperparameter optimisation.
