@@ -1,6 +1,6 @@
 {
   "path": "path/to/train.tsv",
-  "parameter_file": "paramfiles/rsc15_xe_shared_100_best.py",
+  "parameter_string": "loss=cross-entropy,layers=100",
   "test": ["path/to/test.tsv"],
   "measure": [20],
   "eval_type": "standard",

@@ -21,8 +21,6 @@ session and supports both pointwise and pairwise ranking objectives.
 | `run.py` | Train/evaluate models from the command line. |
 | `paropt.py` | Hyperparameter optimisation with Optuna. |
 | `config/` | Example JSON configs for the scripts. |
-| `paramfiles/` | Parameter presets for common datasets. |
-| `paramspaces/` | Search spaces for hyperparameter tuning. |
 
 ## Data Format
 
@@ -54,7 +52,7 @@ Example `config/run.json`:
 ```json
 {
   "path": "path/to/train.tsv",
-  "parameter_file": "paramfiles/rsc15_xe_shared_100_best.py",
+  "parameter_string": "loss=cross-entropy,layers=100",
   "test": ["path/to/test.tsv"],
   "device": "cuda:0"
 }
@@ -92,7 +90,7 @@ Exactly one of the following must be provided when training or evaluating:
 
    ```bash
    python run.py path/to/train.tsv --test path/to/test.tsv \
-        --parameter_file paramfiles/yoochoose_xe_shared_best.py
+        --parameter_string "loss=cross-entropy,layers=100"
    ```
 
 3. Save a trained model:
@@ -119,7 +117,7 @@ python paropt.py path/to/train.tsv path/to/valid.tsv \
 ```
 
 Use `fixed_parameters` in the config to lock certain values and
-`optuna_parameter_file` to describe the search space.
+`optuna_parameter_file` to provide your own search space description.
 
 ## References
 
