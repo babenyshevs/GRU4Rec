@@ -26,34 +26,68 @@ train, valid, test = train_valid_test_split(df)
 
 ## Configuration
 
-Model and data-split parameters can be stored in a YAML configuration file.
-An example is provided in `config/example.yaml`:
+Model, data-loading, training and evaluation parameters can be stored in a YAML
+configuration file. An extended example is provided in
+`config/example.yaml`:
 
 ```yaml
 model:
   layers: [10]
-  n_epochs: 1
+  loss: cross-entropy
   batch_size: 2
+  dropout_p_embed: 0.0
+  dropout_p_hidden: 0.0
   learning_rate: 0.05
+  momentum: 0.0
+  sample_alpha: 0.5
+  n_sample: 2048
+  embedding: 0
+  constrained_embedding: true
+  n_epochs: 1
+  bpreg: 1.0
+  elu_param: 0.5
+  logq: 0.0
+  device: cpu
+
+data:
+  session_key: SessionId
+  item_key: ItemId
+  time_key: Time
 
 data_split:
   valid_fraction: 0.1
   test_fraction: 0.1
+
+training:
+  sample_cache_max_size: 10000000
+  compatibility_mode: true
+
+evaluation:
+  cutoff: [20]
+  batch_size: 512
+  mode: conservative
+
+paths:
+  model_save: model.pth
+  model_load: model.pth
 ```
 
-Adjust the values to match your dataset and desired training setup. Load the
-configuration and use it to initialise the split and model:
+Use the helper functions to load the configuration, split the data and build
+the model:
 
 ```python
-import yaml
-from gru4rec import GRU4Rec, train_valid_test_split
+from gru4rec import (
+    load_config,
+    build_model,
+    split_data,
+    evaluate,
+)
 
-with open("config/example.yaml") as f:
-    cfg = yaml.safe_load(f)
-
-train, valid, test = train_valid_test_split(df, **cfg["data_split"])
-gru = GRU4Rec(**cfg["model"])
-gru.fit(train)
+config = load_config("config/example.yaml")
+train, valid, test = split_data(df, config)
+gru = build_model(config)
+gru.fit(train, **config["training"], **config["data"])
+recall, mrr = evaluate(gru, test, config)
 ```
 
 The notebook `example.ipynb` demonstrates this workflow end-to-end.
