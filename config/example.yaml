@@ -1,0 +1,39 @@
+model:
+  layers: [10]
+  loss: cross-entropy
+  batch_size: 2
+  dropout_p_embed: 0.0
+  dropout_p_hidden: 0.0
+  learning_rate: 0.05
+  momentum: 0.0
+  sample_alpha: 0.5
+  n_sample: 2048
+  embedding: 0
+  constrained_embedding: true
+  n_epochs: 1
+  bpreg: 1.0
+  elu_param: 0.5
+  logq: 0.0
+  device: cpu
+
+data:
+  session_key: SessionId
+  item_key: ItemId
+  time_key: Time
+
+data_split:
+  valid_fraction: 0.1
+  test_fraction: 0.1
+
+training:
+  sample_cache_max_size: 10000000
+  compatibility_mode: true
+
+evaluation:
+  cutoff: [20]
+  batch_size: 512
+  mode: conservative
+
+paths:
+  model_save: model.pth
+  model_load: model.pth
